@@ -62,11 +62,15 @@ def create_packets(bytes_arr, mss):
 
     for segment in rdt_send(bytes_arr, mss):
 
+        data = ""
+        for part in segment:
+            data += part
+
         packet = {"header": {}}
         packet["header"]["sequence_number"] = sequence_no
         packet["header"]["checksum"] = generate_checksum(segment)
         packet["header"]["data_type"] = int('0101010101010101', 2)
-        packet["data"] = segment
+        packet["data"] = data
         all_packets.append(packet)
         sequence_no += 1
 
