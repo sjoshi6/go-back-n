@@ -13,7 +13,6 @@ PL_PROB = ""
 def prob_random_generator():
 
     result = uniform(0, 1)
-    print(result)
 
     return result
 
@@ -56,7 +55,7 @@ def main():
 
         while True:
 
-            data, addr = server_socket.recvfrom(1024)
+            data, addr = server_socket.recvfrom(10000)
 
             # Extract client port details
             client_ip = addr[0]
@@ -64,19 +63,19 @@ def main():
             client_ack_port = int(client_port) + 1
 
             packet = pickle.loads(data)
-            print(packet["data"])
-
             randm = prob_random_generator()
 
             if randm > PL_PROB:
-                print("Discarded this packet")
+                print("Packet is dropped due to to probability "+str(randm))
 
             else:
 
                 if packet["header"]["checksum"] == generate_checksum(packet["data"]):
-                    if packet["header"]["sequence_number"] == expected_seq_no:
 
-                        print("Correct packet received sending ack + file write")
+                    if int(packet["header"]["sequence_number"]) == expected_seq_no:
+
+                        print("Correct packet received with sequence number : "+str(packet["header"]["sequence_number"]))
+                        #print("Data : "+ packet["data"])
 
                         ack = {"header": {}}
                         ack["header"]["data_type"] = int('0101010101010101', 2)
@@ -94,7 +93,8 @@ def main():
 
                     else:
                         print("Packet with unexpected sequence number receiver -- out of order / duplicate packet")
-                        print("Discarded the packet")
+                        #print("Discarded the packet : " + str(packet["data"]))
+                        print("\n")
 
                 else:
                     print("Packet is discarded due to incorrect checksum value")
@@ -102,6 +102,9 @@ def main():
     except socket.error as msg:
         print(msg)
         sys.exit(1)
+
+    except Exception as e:
+        print(e)
 
     finally:
         server_socket.close()

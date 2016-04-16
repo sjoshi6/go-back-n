@@ -3,12 +3,16 @@ import sys
 import pickle
 from threading import Thread, Lock
 from settings import *
+import signal
+from time import time
 
 SERVER_IP = ""
 SERVER_PORT = ""
 FTP_FILE_NAME = ""
 WINDOW_SIZE = ""
 MSS = ""
+# Create a lock to share within threads main / ack handler
+lock = Lock()
 
 
 def read_file(file_name):
@@ -94,7 +98,25 @@ def ack_handler(ack_recv_sock, lock, last_received_ack_p, final_sequence_no_p):
             last_received_ack = ack_data["header"]["ack_number"]
             print(last_received_ack)
 
+        signal.alarm(0)
+        signal.setitimer(signal.ITIMER_REAL, 2)
+
     ack_recv_sock.close()
+
+
+def move_back(signum, frame):
+
+    print("Time out detected ; move back in time to the last received ack packet")
+
+    global last_received_ack, last_sent_sequence_number
+
+    with lock:
+        # Reset the last sent sequence number to the last acknowledged packet
+        signal.alarm(0)
+
+        last_sent_sequence_number = last_received_ack
+
+        signal.setitimer(signal.ITIMER_REAL, 2)
 
 
 def main(lock, packets,final_sequence_no_p):
@@ -102,6 +124,9 @@ def main(lock, packets,final_sequence_no_p):
     try:
         global final_sequence_no, last_sent_sequence_number, next_sequence_number, last_ack_number, current_window_size
         global last_received_ack, finished
+
+        # Setting the timer for packet 1
+        signal.setitimer(signal.ITIMER_REAL, 2)
 
         finished = False
         last_sent_sequence_number = -1
@@ -115,10 +140,13 @@ def main(lock, packets,final_sequence_no_p):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(('', CLIENT_SEND_PORT))
 
+        # Start the time when sending started
+        start_time = time()
+
         # Unless we have reached the last packet
         while int(last_received_ack) < int(final_sequence_no):
 
-            while (int(last_sent_sequence_number) - int(last_received_ack)) < int(WINDOW_SIZE):
+            while ((int(last_sent_sequence_number) - int(last_received_ack)) < int(WINDOW_SIZE)) and int(last_sent_sequence_number) < int(final_sequence_no):
 
                 with lock:
                     packet = packets[last_sent_sequence_number+1]
@@ -126,6 +154,16 @@ def main(lock, packets,final_sequence_no_p):
 
                     data = pickle.dumps(packet)
                     sock.sendto(data, (SERVER_IP, SERVER_PORT))
+
+        # Record time when process ended
+        end_time = time()
+        time_taken = end_time - start_time
+
+        print("#--------------------------#")
+        print("MSS is "+ str(MSS))
+        print("Window size is " + str(WINDOW_SIZE))
+        print("Time for file Transfer = " + str(time_taken)+"\n")
+        print("#--------------------------#")
 
     finally:
         # Once all acks are received close all
@@ -136,8 +174,8 @@ def main(lock, packets,final_sequence_no_p):
 
 def launcher():
 
-    # Create a lock to share within threads main / ack handler
-    lock = Lock()
+    # create the signals for transmission
+    signal.signal(signal.SIGALRM, move_back)
 
     # Create a byte array of data to be sent
     file_byte_arr = read_file(FTP_FILE_NAME)
