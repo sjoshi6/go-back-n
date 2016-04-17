@@ -4,7 +4,7 @@ import pickle
 from random import uniform
 from settings import *
 
-SERVER_IP = "localhost"
+SERVER_IP = "152.46.19.88"
 SERVER_PORT = ""
 FILE_NAME = ""
 PL_PROB = ""
@@ -65,39 +65,44 @@ def main():
             packet = pickle.loads(data)
             randm = prob_random_generator()
 
-            if randm > PL_PROB:
+            if randm <= PL_PROB:
                 print("Packet is dropped due to to probability "+str(randm))
 
-            else:
+            elif randm > PL_PROB:
+                if packet["header"]["fin"] == 1:
 
-                if packet["header"]["checksum"] == generate_checksum(packet["data"]):
+                    print("Fin packet received; resetting expected_seq_no to 0")
+                    expected_seq_no = 0
 
-                    if int(packet["header"]["sequence_number"]) == expected_seq_no:
+                elif packet["header"]["fin"] == 0:
+                    if packet["header"]["checksum"] == generate_checksum(packet["data"]):
 
-                        print("Correct packet received with sequence number : "+str(packet["header"]["sequence_number"]))
-                        #print("Data : "+ packet["data"])
+                        if int(packet["header"]["sequence_number"]) == expected_seq_no:
 
-                        ack = {"header": {}}
-                        ack["header"]["data_type"] = int('0101010101010101', 2)
-                        ack["header"]["bit_field"] = int('0000000000000000', 2)
-                        ack["header"]["ack_number"] = packet["header"]["sequence_number"]
+                            print("Correct packet received with sequence number : "+str(packet["header"]["sequence_number"]))
+                            #print("Data : "+ packet["data"])
 
-                        # Send the data and close this connection
-                        server_socket.sendto(pickle.dumps(ack), (client_ip, client_ack_port))
+                            ack = {"header": {}}
+                            ack["header"]["data_type"] = int('0101010101010101', 2)
+                            ack["header"]["bit_field"] = int('0000000000000000', 2)
+                            ack["header"]["ack_number"] = packet["header"]["sequence_number"]
 
-                        # Write the data into the file
-                        with open("server_data/"+FILE_NAME, "ab+") as f:
-                            f.write(packet["data"])
+                            # Send the data and close this connection
+                            server_socket.sendto(pickle.dumps(ack), (client_ip, client_ack_port))
 
-                        expected_seq_no += 1
+                            # Write the data into the file
+                            with open("server_data/"+FILE_NAME, "ab+") as f:
+                                f.write(packet["data"])
+
+                            expected_seq_no += 1
+
+                        else:
+                            print("Packet with unexpected sequence number receiver -- out of order / duplicate packet")
+                            #print("Discarded the packet : " + str(packet["data"]))
+                            print("\n")
 
                     else:
-                        print("Packet with unexpected sequence number receiver -- out of order / duplicate packet")
-                        #print("Discarded the packet : " + str(packet["data"]))
-                        print("\n")
-
-                else:
-                    print("Packet is discarded due to incorrect checksum value")
+                        print("Packet is discarded due to incorrect checksum value")
 
     except socket.error as msg:
         print(msg)

@@ -74,6 +74,7 @@ def create_packets(bytes_arr, mss):
         packet["header"]["sequence_number"] = sequence_no
         packet["header"]["checksum"] = generate_checksum(segment)
         packet["header"]["data_type"] = int('0101010101010101', 2)
+        packet["header"]["fin"]=0
         packet["data"] = data
         all_packets.append(packet)
         sequence_no += 1
@@ -138,7 +139,7 @@ def main(lock, packets,final_sequence_no_p):
         # Create a socket to connect to server
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('', CLIENT_SEND_PORT))
+        sock.bind(('152.46.20.210', CLIENT_SEND_PORT))
 
         # Start the time when sending started
         start_time = time()
@@ -155,15 +156,25 @@ def main(lock, packets,final_sequence_no_p):
                     data = pickle.dumps(packet)
                     sock.sendto(data, (SERVER_IP, SERVER_PORT))
 
+        packet = {"header": {}}
+        packet["header"]["sequence_number"] = final_sequence_no+1
+        packet["header"]["checksum"] = "0000000000000000"
+        packet["header"]["data_type"] = int('0101010101010101', 2)
+        packet["header"]["fin"]=1
+        packet["data"] = ""
+
+        data = pickle.dumps(packet)
+        sock.sendto(data,(SERVER_IP, SERVER_PORT))
+
         # Record time when process ended
         end_time = time()
         time_taken = end_time - start_time
-
-        print("#--------------------------#")
-        print("MSS is "+ str(MSS))
-        print("Window size is " + str(WINDOW_SIZE))
-        print("Time for file Transfer = " + str(time_taken)+"\n")
-        print("#--------------------------#")
+        with open('results.txt', 'ab+') as data_file:
+            data_file.write("#--------------------------#\n")
+            data_file.write("MSS is "+ str(MSS)+"\n")
+            data_file.write("Window size is " + str(WINDOW_SIZE)+"\n")
+            data_file.write("Time for file Transfer = " + str(time_taken)+"\n")
+            data_file.write("#--------------------------#\n")
 
     finally:
         # Once all acks are received close all
@@ -184,7 +195,7 @@ def launcher():
 
     ack_recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     ack_recv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    ack_recv_sock.bind(('', CLIENT_ACK_PORT))
+    ack_recv_sock.bind(('152.46.20.210', CLIENT_ACK_PORT))
 
     # Launch the ack handler in a separate thread
     t = Thread(target=ack_handler, args=(ack_recv_sock, lock, -1, last_sequence_number))
