@@ -169,6 +169,7 @@ def main(lock, packets,final_sequence_no_p):
         # Record time when process ended
         end_time = time()
         time_taken = end_time - start_time
+
         with open('results.txt', 'ab+') as data_file:
             data_file.write("#--------------------------#\n")
             data_file.write("MSS is "+ str(MSS)+"\n")
@@ -212,3 +213,4 @@ if __name__ == "__main__":
     WINDOW_SIZE = int(sys.argv[4])
     MSS = int(sys.argv[5])
     launcher()
+
