@@ -4,7 +4,7 @@ import pickle
 from random import uniform
 from settings import *
 
-SERVER_IP = "152.46.19.88"
+SERVER_IP = ""
 SERVER_PORT = ""
 FILE_NAME = ""
 PL_PROB = ""
@@ -116,9 +116,9 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-
-    SERVER_PORT = int(sys.argv[1])
-    FILE_NAME = sys.argv[2]
-    PL_PROB = float(sys.argv[3])
+    SERVER_IP = sys.argv[1]
+    SERVER_PORT = int(sys.argv[2])
+    FILE_NAME = sys.argv[3]
+    PL_PROB = float(sys.argv[4])
 
     main()
