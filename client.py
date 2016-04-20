@@ -6,6 +6,7 @@ from settings import *
 import signal
 from time import time
 
+CLIENT_IP = ""
 SERVER_IP = ""
 SERVER_PORT = ""
 FTP_FILE_NAME = ""
@@ -139,7 +140,7 @@ def main(lock, packets,final_sequence_no_p):
         # Create a socket to connect to server
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('152.46.20.210', CLIENT_SEND_PORT))
+        sock.bind((CLIENT_IP, CLIENT_SEND_PORT))
 
         # Start the time when sending started
         start_time = time()
@@ -196,7 +197,7 @@ def launcher():
 
     ack_recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     ack_recv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    ack_recv_sock.bind(('152.46.20.210', CLIENT_ACK_PORT))
+    ack_recv_sock.bind((CLIENT_IP, CLIENT_ACK_PORT))
 
     # Launch the ack handler in a separate thread
     t = Thread(target=ack_handler, args=(ack_recv_sock, lock, -1, last_sequence_number))
@@ -212,5 +213,6 @@ if __name__ == "__main__":
     FTP_FILE_NAME = sys.argv[3]
     WINDOW_SIZE = int(sys.argv[4])
     MSS = int(sys.argv[5])
+    CLIENT_IP = sys.argv[6]
     launcher()
 
