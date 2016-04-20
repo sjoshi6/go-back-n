@@ -29,11 +29,11 @@ python client.py SERVER_IP SERVER_PORT FILE_TO_BE_SENT WINDOW_SIZE MSS
 
 #### server execution
 
-![ScreenShot](img/server.png)
+![ScreenShot](server.png)
 
 #### peer execution
 
-![ScreenShot](img/client.png)
+![ScreenShot](client.png)
 
 
 
