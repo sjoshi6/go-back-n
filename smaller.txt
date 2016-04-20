@@ -28725,3 +28725,4 @@ def g():
         s.add(c)
   print s
   print [ord(c) for c in s]
+
