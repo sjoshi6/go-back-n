@@ -31,3 +31,6 @@ python client.py SERVER_IP SERVER_PORT FILE_TO_BE_SENT WINDOW_SIZE MSS CLIENT_IP
 ./results_script2.sh
 
 - Enter the values for SERVER IP , SERVER PORT and CLIENT IP
+
+--------------
+Project Results can be found in the file in this folder --> project2-goback-n.pdf
