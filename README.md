@@ -17,7 +17,7 @@ python client.py SERVER_IP SERVER_PORT FILE_TO_BE_SENT WINDOW_SIZE MSS CLIENT_IP
 
 ### Experiment 1 can be triggered using
 ```
-./results_script.sh
+./result_script.sh
 ```
 ###### Enter the values for SERVER IP , SERVER PORT and CLIENT IP
 
@@ -25,7 +25,7 @@ python client.py SERVER_IP SERVER_PORT FILE_TO_BE_SENT WINDOW_SIZE MSS CLIENT_IP
 
 ### Experiment 2 can be triggered using
 ```
-./results_script2.sh
+./result_script2.sh
 ```
 
 ###### Enter the values for SERVER IP , SERVER PORT and CLIENT IP
